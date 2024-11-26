@@ -1,1 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agenda Virtual</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+        .container {
+            width: 80%;
+            margin: 20px auto;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            justify-items: center;
+        }
+        .calendar div {
+            padding: 20px;
+            border: 1px solid #ddd;
+            text-align: center;
+            background-color: white;
+            cursor: pointer;
+            position: relative;
+        }
+        .calendar div.today {
+            background-color: #f0f8ff;
+            font-weight: bold;
+        }
+        .calendar div.disabled {
+            background-color: #f9f9f9;
+            cursor: not-allowed;
+        }
+        .event-list {
+            margin-top: 20px;
+        }
+        .event {
+            background-color: #e0f7fa;
+            padding: 5px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .event h4 {
+            margin: 0;
+            font-size: 14px;
+        }
+        .event p {
+            margin: 0;
+            font-size: 12px;
+        }
+        .popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .popup-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            width: 300px;
+            max-width: 80%;
+        }
+        .popup-content input, .popup-content textarea {
+            width: 100%;
+            margin: 5px 0;
+            padding: 10px;
+            font-size: 14px;
+        }
+        .popup-content button {
+            width: 100%;
+            padding: 10px;
+            background-color: #00796b;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .popup-content button:hover {
+            background-color: #004d40;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Agenda Virtual</h1>
+        <p>Agenda tus reuniones por mes</p>
+    </header>
+
+    <div class="calendar" id="calendar"></div>
+
+    <!-- Popup para agregar evento -->
+    <div class="popup" id="popup">
+        <div class="popup-content">
+            <h3>Agregar Reunión</h3>
+            <input type="text" id="eventTitle" placeholder="Título de la reunión" />
+            <input type="time" id="eventTime" />
+            <textarea id="eventDescription" placeholder="Descripción"></textarea>
+            <button onclick="saveEvent()">Guardar Evento</button>
+        </div>
+    </div>
+
+    <div class="event-list" id="eventList"></div>
+</div>
+
+<script>
+    const currentDate = new Date();
+    let selectedDate = null;
+    const events = [];
+
+    // Función para generar el calendario
+    function generateCalendar() {
+        const month = currentDate.getMonth();
+        const year = currentDate.getFullYear();
+        const firstDay = new Date(year, month, 1).getDay();
+        const lastDate = new Date(year, month + 1, 0).getDate();
+
+        const calendar = document.getElementById('calendar');
+        calendar.innerHTML = ''; // Limpiar calendario previo
+
+        // Crear cabecera de los días
+        const daysOfWeek = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+        daysOfWeek.forEach(day => {
+            const dayElement = document.createElement('div');
+            dayElement.textContent = day;
+            calendar.appendChild(dayElement);
+        });
+
+        // Espacios vacíos para los días anteriores al 1 del mes
+        for (let i = 0; i < firstDay; i++) {
+            const emptyDiv = document.createElement('div');
+            calendar.appendChild(emptyDiv);
+        }
+
+        // Crear los días del mes
+        for (let day = 1; day <= lastDate; day++) {
+            const dayDiv = document.createElement('div');
+            dayDiv.textContent = day;
+
+            // Marcar el día de hoy
+            if (day === currentDate.getDate()) {
+                dayDiv.classList.add('today');
+            }
+
+            dayDiv.addEventListener('click', () => selectDate(day));
+
+            calendar.appendChild(dayDiv);
+        }
+    }
+
+    // Función para manejar la selección de una fecha
+    function selectDate(day) {
+        selectedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+        showPopup();
+    }
+
+    // Función para mostrar el popup de agregar evento
+    function showPopup() {
+        const popup = document.getElementById('popup');
+        popup.style.display = 'flex';
+    }
+
+    // Función para guardar el evento
+    function saveEvent() {
+        const title = document.getElementById('eventTitle').value;
+        const time = document.getElementById('eventTime').value;
+        const description = document.getElementById('eventDescription').value;
+
+        if (title && time) {
+            const event = {
+                date: selectedDate,
+                title: title,
+                time: time,
+                description: description,
+            };
+            events.push(event);
+            updateEventList();
+            hidePopup();
+        } else {
+            alert("Por favor, complete el título y la hora.");
+        }
+    }
+
+    // Función para ocultar el popup
+    function hidePopup() {
+        document.getElementById('popup').style.display = 'none';
+    }
+
+    // Función para actualizar la lista de eventos
+    function updateEventList() {
+        const eventList = document.getElementById('eventList');
+        eventList.innerHTML = '';
+
+        const filteredEvents = events.filter(event => {
+            return event.date.getFullYear() === currentDate.getFullYear() &&
+                   event.date.getMonth() === currentDate.getMonth();
+        });
+
+        filteredEvents.forEach(event => {
+            const eventDiv = document.createElement('div');
+            eventDiv.classList.add('event');
+            eventDiv.innerHTML = `
+                <h4>${event.title} - ${event.time}</h4>
+                <p>${event.description}</p>
+            `;
+            eventList.appendChild(eventDiv);
+        });
+    }
+
+    // Inicializar calendario
+    generateCalendar();
+</script>
+
+</body>
+</html>
 
