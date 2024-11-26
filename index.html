@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agenda Virtual</title>
+    <title>Agenda de Reuniones</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -41,23 +41,6 @@
             background-color: #f9f9f9;
             cursor: not-allowed;
         }
-        .event-list {
-            margin-top: 20px;
-        }
-        .event {
-            background-color: #e0f7fa;
-            padding: 5px;
-            margin-bottom: 10px;
-            border-radius: 5px;
-        }
-        .event h4 {
-            margin: 0;
-            font-size: 14px;
-        }
-        .event p {
-            margin: 0;
-            font-size: 12px;
-        }
         .popup {
             display: none;
             position: fixed;
@@ -73,12 +56,12 @@
             background-color: white;
             padding: 20px;
             border-radius: 5px;
-            width: 300px;
+            width: 400px;
             max-width: 80%;
         }
-        .popup-content input, .popup-content textarea {
+        .popup-content input, .popup-content textarea, .popup-content select {
             width: 100%;
-            margin: 5px 0;
+            margin: 10px 0;
             padding: 10px;
             font-size: 14px;
         }
@@ -93,14 +76,31 @@
         .popup-content button:hover {
             background-color: #004d40;
         }
+        .event-list {
+            margin-top: 20px;
+        }
+        .event {
+            background-color: #e0f7fa;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .event h4 {
+            margin: 0;
+            font-size: 16px;
+        }
+        .event p {
+            margin: 0;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <h1>Agenda Virtual</h1>
-        <p>Agenda tus reuniones por mes</p>
+        <h1>Agenda de Reuniones</h1>
+        <p>Programa tus reuniones con temas, participantes y objetivos.</p>
     </header>
 
     <div class="calendar" id="calendar"></div>
@@ -109,10 +109,24 @@
     <div class="popup" id="popup">
         <div class="popup-content">
             <h3>Agregar Reunión</h3>
+            <label for="eventTitle">Tema de la reunión</label>
             <input type="text" id="eventTitle" placeholder="Título de la reunión" />
-            <input type="time" id="eventTime" />
-            <textarea id="eventDescription" placeholder="Descripción"></textarea>
-            <button onclick="saveEvent()">Guardar Evento</button>
+
+            <label for="eventParticipants">Participantes (correos separados por coma)</label>
+            <input type="text" id="eventParticipants" placeholder="ejemplo@mail.com, otro@mail.com" />
+
+            <label for="eventDuration">Duración de la reunión</label>
+            <select id="eventDuration">
+                <option value="30">30 minutos</option>
+                <option value="60">1 hora</option>
+                <option value="90">1 hora 30 minutos</option>
+                <option value="120">2 horas</option>
+            </select>
+
+            <label for="eventObjectives">Objetivos de la reunión</label>
+            <textarea id="eventObjectives" placeholder="Escribe los objetivos o puntos a tratar"></textarea>
+
+            <button onclick="saveEvent()">Guardar Reunión</button>
         </div>
     </div>
 
@@ -179,21 +193,23 @@
     // Función para guardar el evento
     function saveEvent() {
         const title = document.getElementById('eventTitle').value;
-        const time = document.getElementById('eventTime').value;
-        const description = document.getElementById('eventDescription').value;
+        const participants = document.getElementById('eventParticipants').value.split(',').map(email => email.trim());
+        const duration = document.getElementById('eventDuration').value;
+        const objectives = document.getElementById('eventObjectives').value;
 
-        if (title && time) {
+        if (title && participants.length > 0 && duration) {
             const event = {
                 date: selectedDate,
                 title: title,
-                time: time,
-                description: description,
+                participants: participants,
+                duration: duration,
+                objectives: objectives,
             };
             events.push(event);
             updateEventList();
             hidePopup();
         } else {
-            alert("Por favor, complete el título y la hora.");
+            alert("Por favor, complete todos los campos.");
         }
     }
 
@@ -216,8 +232,9 @@
             const eventDiv = document.createElement('div');
             eventDiv.classList.add('event');
             eventDiv.innerHTML = `
-                <h4>${event.title} - ${event.time}</h4>
-                <p>${event.description}</p>
+                <h4>${event.title} (${event.duration} min)</h4>
+                <p><strong>Participantes:</strong> ${event.participants.join(', ')}</p>
+                <p><strong>Objetivos:</strong> ${event.objectives}</p>
             `;
             eventList.appendChild(eventDiv);
         });
@@ -229,4 +246,5 @@
 
 </body>
 </html>
+
 
